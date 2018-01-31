@@ -1,0 +1,148 @@
+<html>
+  <body>
+
+    <canvas width='1000' height='800' style="padding: 25px" id='canvas'></canvas>
+    <br>
+    <button id='up'>up</button>
+    <button id='down'>down</button>
+    <button id='left'>left</button>
+    <button id='right'>right</button>
+    <script src='https://code.jquery.com/jquery-3.3.1.min.js'></script>
+    <script>
+
+function shuffle(array) {
+  var currentIndex = array.length, temporaryValue, randomIndex;
+
+  // While there remain elements to shuffle...
+  while (0 !== currentIndex) {
+
+    // Pick a remaining element...
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex -= 1;
+
+    // And swap it with the current element.
+    temporaryValue = array[currentIndex];
+    array[currentIndex] = array[randomIndex];
+    array[randomIndex] = temporaryValue;
+  }
+
+  return array;
+}
+
+var Maze = function(xSize, ySize, scale){
+  this.canvas = document.getElementById('canvas');
+  this.scale = scale;
+  this.xSize = xSize;
+  this.ySize = ySize;
+  this.xPos = xSize-2;
+  this.yPos = ySize-2;
+  this.canvas.width = this.xSize * this.scale;
+  this.canvas.height = this.ySize * this.scale;
+  this.ctx = this.canvas.getContext('2d');
+  this.map = [];
+  for(var x=0; x<this.xSize; x++){
+    this.map[x] = [];
+  }
+  this.wallColor = 'black';
+  this.pathColor = 'white';
+  this.trailColor = 'blue';
+}
+
+Maze.prototype.drawDot = function(x, y, color){
+  this.ctx.fillStyle = color;
+  this.ctx.fillRect(x*this.scale, y*this.scale, this.scale, this.scale);
+  this.map[x][y] = color;
+};
+
+Maze.prototype.fill = function(){
+  for(var x=0; x < this.xSize; x++){
+    for(var y=0; y < this.ySize; y++){
+      this.drawDot(x, y, this.wallColor);
+    }
+  }
+};
+
+Maze.prototype.getValue = function(x, y){
+  return this.map[x][y];
+}
+
+Maze.prototype.excavate = function(){
+  var startX = 1;
+  var startY = 1;
+  var _excavate = function(maze, x, y){
+    if (x < 1) {
+      return false;
+    }
+    if (x > maze.xSize - 1) {
+      return false;
+    }
+    if (y < 1) {
+      return false;
+    }
+    if (y > maze.ySize - 1) {
+      return false;
+    }
+    if (maze.map[x][y] !== maze.wallColor) {
+      return false;
+    }
+    maze.drawDot(x, y, maze.pathColor);
+    var directions = shuffle([[1,0], [0,1], [-1,0], [0,-1]]);
+    for (var i=0; i < directions.length; i++) {
+      var newX = x + directions[i][0]*2;
+      var newY = y + directions[i][1]*2;
+
+      if(_excavate(maze, newX, newY)){
+        maze.drawDot(x+directions[i][0], y+directions[i][1], maze.pathColor);
+      }
+    }
+    return true;
+
+  };
+
+  _excavate(this, startX, startY);
+}
+
+
+Maze.prototype.drawPlayer = function() {
+  this.drawDot(this.xPos, this.yPos, 'red');
+}
+Maze.prototype.move = function(dX, dY) {
+  if (this.map[this.xPos + dX][this.yPos + dY] !== this.wallColor) {
+    this.drawDot(this.xPos, this.yPos, maze.trailColor);
+    this.xPos += dX;
+    this.yPos += dY;
+    this.drawPlayer();
+  }
+}
+var maze = new Maze(49, 49, 20);
+
+maze.fill();
+maze.excavate();
+maze.drawPlayer();
+
+$('#up').click(function() {maze.move(0, -1);});
+$('#down').click(function() {maze.move(0, 1);});
+$('#left').click(function() {maze.move(-1, 0);});
+$('#right').click(function() {maze.move(1, 0);});
+
+window.onkeyup = function(e) {
+  if (e.key === 'ArrowUp') {
+    maze.move(0, -1);
+  }
+  if (e.key === 'ArrowDown') {
+    maze.move(0, 1);
+  }
+  if (e.key === 'ArrowLeft') {
+    maze.move(-1, 0);
+  }
+  if (e.key === 'ArrowRight') {
+    maze.move(1, 0);
+  }
+
+    
+}
+
+
+    </script>
+  </body>
+</html>
